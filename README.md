@@ -39,7 +39,7 @@ log4j.appender.Console.Threshold=TRACE
 log4j.appender.Console.layout=org.apache.log4j.PatternLayout
 log4j.appender.Console.layout.ConversionPattern=[%d{dd MMM yyyy HH:mm:ss.SSS}] [%p.%c] %m%n
 
-log4j.appender.Zmq=logstash.ZMQAppender
+log4j.appender.Zmq=com.enstratus.logstash.ZMQAppender
 log4j.appender.Zmq.Threshold=DEBUG
 log4j.appender.Zmq.endpoint=tcp://10.1.1.217:5556
 log4j.appender.Zmq.blocking=true
@@ -64,6 +64,8 @@ I've not done any real work myself. This has been done by muddling through the e
 Both [@flangy](http://twitter.com/flangy) and [@jostheim](http://twitter.com/jostheim) have been awesomely helpful in this process.
 
 However all the real work was done by the author of logcentric.
+
+Additionally, this is being done as part of my work for enStratus on building out our logging infrastructure.
 
 # License
 No clue. I'm pinging the author of logcentric for what the license he was planning on for logcentric
