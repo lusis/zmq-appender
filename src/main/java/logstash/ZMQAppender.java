@@ -23,10 +23,10 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 	private String identity;
 	private boolean blocking;
 	
-	private String pubsub = "pub";
-	private String pushpull = "push";
-	private String connectMode = "connect";
-	private String bindMode = "bind";
+	private static final String PUBSUB = "pub";
+	private static final String PUSHPULL = "push";
+	private static final String CONNECTMODE = "connect";
+	private static final String BINDMODE = "bind";
 
 	public ZMQAppender() {
 		super();
@@ -55,7 +55,7 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 	protected void append(final LoggingEvent event) {
 		final LoggingEventData data = new LoggingEventData(event);
 		final String json = gson.toJson(data);
-		if ((topic != null) && (pubsub.equals(socketType))) {
+		if ((topic != null) && (PUBSUB.equals(socketType))) {
 			socket.send(topic.getBytes(), ZMQ.SNDMORE);
 		}
 		socket.send(json.getBytes(), blocking ? 0 : ZMQ.NOBLOCK);
@@ -70,10 +70,10 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 		// Someone explain to me why reversing the comparison
 		// throws an NPE i.e.:
 		// if (socket_type.equals(pubsub)) 
-		if (pubsub.equals(socketType)) {
+		if (PUBSUB.equals(socketType)) {
 			sender = context.socket(ZMQ.PUB);
 		}
-		else if (pushpull.equals(socketType))
+		else if (PUSHPULL.equals(socketType))
 		{
 			sender = context.socket(ZMQ.PUSH);
 		}
@@ -84,7 +84,7 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 		
 		final Socket socket = sender;
 		
-		if (bindMode.equals(mode)) {
+		if (BINDMODE.equals(mode)) {
 			socket.bind(endpoint);
 		}
 		else
