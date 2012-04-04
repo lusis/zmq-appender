@@ -1,4 +1,4 @@
-package logstash.data;
+package com.enstratus.logstash.data;
 
 import java.util.Arrays;
 import java.util.List;

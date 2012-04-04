@@ -1,4 +1,4 @@
-package logstash.data;
+package com.enstratus.logstash.data;
 
 import org.apache.log4j.spi.LocationInfo;
 

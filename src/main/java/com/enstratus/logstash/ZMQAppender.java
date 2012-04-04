@@ -1,4 +1,4 @@
-package logstash;
+package com.enstratus.logstash;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
@@ -8,7 +8,7 @@ import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 import com.google.gson.Gson;
-import logstash.data.LoggingEventData;
+import com.enstratus.logstash.data.LoggingEventData;
 
 public class ZMQAppender extends AppenderSkeleton implements Appender {
 
