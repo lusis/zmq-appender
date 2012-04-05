@@ -8,6 +8,7 @@ import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.enstratus.logstash.data.LoggingEventData;
 
 public class ZMQAppender extends AppenderSkeleton implements Appender {
@@ -22,6 +23,7 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 	private String topic;
 	private String identity;
 	private boolean blocking;
+	private JsonObject logevent;
 	
 	private static final String PUBSUB = "pub";
 	private static final String PUSHPULL = "push";
@@ -54,7 +56,13 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 	@Override
 	protected void append(final LoggingEvent event) {
 		final LoggingEventData data = new LoggingEventData(event);
-		final String json = gson.toJson(data);
+		JsonObject eventData = (JsonObject) gson.toJsonTree(data);
+		String identifier = getIdentity();
+		if (identifier != null) {
+			String identity = "identity";
+			eventData.addProperty(identity, identifier);
+		}
+		final String json = gson.toJson(eventData);
 		if ((topic != null) && (PUBSUB.equals(socketType))) {
 			socket.send(topic.getBytes(), ZMQ.SNDMORE);
 		}
