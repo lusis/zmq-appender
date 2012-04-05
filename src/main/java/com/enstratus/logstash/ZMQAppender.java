@@ -67,9 +67,6 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 
 		final Context context = ZMQ.context(threads);
 		Socket sender;
-		// Someone explain to me why reversing the comparison
-		// throws an NPE i.e.:
-		// if (socket_type.equals(pubsub)) 
 		if (PUBSUB.equals(socketType)) {
 			sender = context.socket(ZMQ.PUB);
 		}
@@ -86,6 +83,10 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 		
 		if (BINDMODE.equals(mode)) {
 			socket.bind(endpoint);
+		}
+		else if (CONNECTMODE.equals(mode))
+		{
+			socket.connect(endpoint);
 		}
 		else
 		{
