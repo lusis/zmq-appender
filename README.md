@@ -60,12 +60,6 @@ log4j.appender.Zmq.topic=footopic
 
 If you set the `identity` property, this will not only set the socket identity but also add a new field to the JSON called, surprisingly, identity. The reason for this is that there is currently NO way in ZeroMQ to get a peer's identity outside of making it part of the message.
 
-```ruby
-{:timestamp=>"2012-04-05T15:39:59.193000 +0000", :message=>"Using experimental plugin 'zeromq'. This plugin is untested and may change in the future. For more information about plugin statuses, see http://logstash.net/docs/1.1.0.1/plugin-status ", :level=>:warn}{"@source"=>"zmq+pubsub://zmq-input/", "@type"=>"zmq-input", "@tags"=>[], "@fields"=>{"fqn"=>"org.apache.log4j.Category", "log"=>"foo.Log4jExample", "time"=>1333640489005, "level"=>"DEBUG", "msg"=>"Hello this is an debug message", "thread"=>"main", "info"=>{"file"=>"Log4jExample.java", "clazz"=>"foo.Log4jExample", "method"=>"main", "line"=>"17"}, "mdc"=>{}, "identity"=>"worker-e"}, "@timestamp"=>"2012-04-05T15:41:29.073000Z", "@source_host"=>"zmq-input", "@source_path"=>"/", "@message"=>"{\"fqn\":\"org.apache.log4j.Category\",\"log\":\"foo.Log4jExample\",\"time\":1333640489005,\"level\":\"DEBUG\",\"msg\":\"Hello this is an debug message\",\"thread\":\"main\",\"info\":{\"file\":\"Log4jExample.java\",\"clazz\":\"foo.Log4jExample\",\"method\":\"main\",\"line\":\"17\"},\"mdc\":{},\"identity\":\"worker-e\"}"}
-
-{"@source"=>"zmq+pubsub://zmq-input/", "@type"=>"zmq-input", "@tags"=>[], "@fields"=>{"fqn"=>"org.apache.log4j.Category", "log"=>"foo.Log4jExample", "time"=>1333640489037, "level"=>"INFO", "msg"=>"Hello this is an info message", "thread"=>"main", "info"=>{"file"=>"Log4jExample.java", "clazz"=>"foo.Log4jExample", "method"=>"main", "line"=>"18"}, "mdc"=>{}, "identity"=>"worker-e"}, "@timestamp"=>"2012-04-05T15:41:29.093000Z", "@source_host"=>"zmq-input", "@source_path"=>"/", "@message"=>"{\"fqn\":\"org.apache.log4j.Category\",\"log\":\"foo.Log4jExample\",\"time\":1333640489037,\"level\":\"INFO\",\"msg\":\"Hello this is an info message\",\"thread\":\"main\",\"info\":{\"file\":\"Log4jExample.java\",\"clazz\":\"foo.Log4jExample\",\"method\":\"main\",\"line\":\"18\"},\"mdc\":{},\"identity\":\"worker-e\"}"}
-```
-
 # Credits
 I've not done any real work myself. This has been done by muddling through the existing work of the logcentric code and figuring out Java in the process.
 
