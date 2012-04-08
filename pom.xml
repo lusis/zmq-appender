@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.enstratus.logstash</groupId>
 	<artifactId>zmq-appender</artifactId>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<name>Logstash ZMQ Appender</name>
 	<description>log4j zmq appender for use with logstash. based on logcentric</description>
 	<build>

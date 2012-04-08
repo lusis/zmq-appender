@@ -3,6 +3,7 @@ package com.enstratus.logstash;
 import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.helpers.LogLog;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
@@ -76,30 +77,43 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 		final Context context = ZMQ.context(threads);
 		Socket sender;
 		if (PUBSUB.equals(socketType)) {
+			LogLog.debug("Setting socket type to PUB");
 			sender = context.socket(ZMQ.PUB);
 		}
 		else if (PUSHPULL.equals(socketType))
 		{
+			LogLog.debug("Setting socket type to PUSH");
 			sender = context.socket(ZMQ.PUSH);
 		}
 		else
 		{
+			LogLog.debug("Setting socket type to default PUB");
 			sender = context.socket(ZMQ.PUB);
 		}
+		sender.setLinger(1);
 		
 		final Socket socket = sender;
 		
-		if (BINDMODE.equals(mode)) {
-			socket.bind(endpoint);
+		final String[] endpoints = endpoint.split(",");
+		
+		for(String ep : endpoints) {
+			
+			if (BINDMODE.equals(mode)) {
+				LogLog.debug("Binding socket to " + ep);
+				socket.bind(ep);
+			}
+			else if (CONNECTMODE.equals(mode))
+			{
+				LogLog.debug("Connecting socket to " + ep);
+				socket.connect(ep);
+			}
+			else
+			{
+				LogLog.debug("Default connecting socket to " + ep);
+				socket.connect(ep);
+			}	
 		}
-		else if (CONNECTMODE.equals(mode))
-		{
-			socket.connect(endpoint);
-		}
-		else
-		{
-			socket.connect(endpoint);
-		}
+		
 		if (identity != null) {
 			socket.setIdentity(identity.getBytes());
 		}
