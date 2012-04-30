@@ -22,6 +22,7 @@ import org.apache.log4j.spi.ThrowableInformation;
 import org.junit.Before;
 import org.junit.Test;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
 import com.google.gson.Gson;
@@ -33,7 +34,9 @@ public class ZMQAppenderTest {
 	// unit
 	ZMQAppender appender;
 
+	Context context;
 	Socket socket;
+	Socket receiver;
 
 	List<LoggingEvent> events = Arrays.asList(event(Level.FATAL, "fatal"),
 			event(Level.ERROR, "error"), event(Level.INFO, "info"),
@@ -41,7 +44,7 @@ public class ZMQAppenderTest {
 
 	LoggingEvent event(Level level, Object message) {
 		Logger logger = Logger.getLogger(ZMQAppenderTest.class);
-		String fqn = "com.y1ban.zmq_appender.test";
+		String fqn = "com.enstratus.logstash.test";
 		long timeStamp = Calendar.getInstance().getTimeInMillis();
 		String threadName = "testThread";
 		Throwable throwable = new NullPointerException();
@@ -60,6 +63,8 @@ public class ZMQAppenderTest {
 
 	@Before
 	public void setup() {
+		context = ZMQ.context(1);
+		receiver = context.socket(ZMQ.PULL);
 		socket = createMock(Socket.class);
 		appender = new ZMQAppender(socket);
 	}

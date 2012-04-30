@@ -1,6 +1,5 @@
 package com.enstratus.logstash;
 
-import org.apache.log4j.Appender;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.helpers.LogLog;
@@ -8,28 +7,37 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
 import org.zeromq.ZMQ.Socket;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.enstratus.logstash.data.LoggingEventData;
+import com.google.gson.*;
 
-public class ZMQAppender extends AppenderSkeleton implements Appender {
+import com.enstratus.logstash.data.LoggingEventData;
+import com.enstratus.logstash.LogstashMessage;
+import sun.net.idn.StringPrep;
+
+public class ZMQAppender extends AppenderSkeleton {
 
 	private Socket socket;
 	private final Gson gson = new Gson();
 
+	// ZMQ specific "stuff"
 	private int threads;
+	private int hwm;
 	private String endpoint;
 	private String mode;
 	private String socketType;
 	private String topic;
 	private String identity;
 	private boolean blocking;
-	private JsonObject logevent;
+	
+	// Ancillary settings
+	private String tags;
+	private String eventFormat = "json_event";
 	
 	private static final String PUBSUB = "pub";
 	private static final String PUSHPULL = "push";
 	private static final String CONNECTMODE = "connect";
 	private static final String BINDMODE = "bind";
+    private static final String JSONFORMAT = "json";
+    private static final String JSONEVENTFORMAT = "json_event";
 
 	public ZMQAppender() {
 		super();
@@ -45,30 +53,54 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 
 	}
 
-	/**
-	 * ZMQAppender doesn't require layout, just publishes log events over
-	 * ZeroMQ. Real logging tasks are up to subscribers.
-	 */
 	@Override
 	public boolean requiresLayout() {
-		return false;
+        return false;
 	}
 
 	@Override
-	protected void append(final LoggingEvent event) {
+	protected void append(LoggingEvent event) {
 		final LoggingEventData data = new LoggingEventData(event);
-		JsonObject eventData = (JsonObject) gson.toJsonTree(data);
-		String identifier = getIdentity();
-		if (identifier != null) {
-			String identity = "identity";
-			eventData.addProperty(identity, identifier);
-		}
-		final String json = gson.toJson(eventData);
-		if ((topic != null) && (PUBSUB.equals(socketType))) {
-			socket.send(topic.getBytes(), ZMQ.SNDMORE);
-		}
-		socket.send(json.getBytes(), blocking ? 0 : ZMQ.NOBLOCK);
-	}
+        String messageFormat = getEventFormat();
+        String logLine = "";
+
+        String identifier = getIdentity();
+        String[] tagz;
+        if(!(null == tags)) {
+            tagz = getTags().split(",");
+        }
+        else
+        {
+            tagz = null;
+        }
+
+        if(JSONFORMAT.equals(messageFormat)) {
+            JsonObject eventData = (JsonObject) gson.toJsonTree(data);
+            JsonParser parser = new JsonParser();
+
+            if (identifier != null) {
+                String identity = "identity";
+                eventData.addProperty(identity, identifier);
+            }
+
+            if (tags != null) {
+                String tag_key = "tags";
+                JsonElement o = (JsonElement)parser.parse(gson.toJson(tagz));
+                LogLog.debug("tagz: " + gson.toJson(tagz));
+                eventData.add(tag_key, o);
+            }
+            logLine = gson.toJson(eventData);
+        }
+        else if(JSONEVENTFORMAT.equals(messageFormat)) {
+            LogstashMessage message = new LogstashMessage(data,identifier,tagz);
+            logLine = gson.toJson(message);
+        }
+        if ((topic != null) && (PUBSUB.equals(socketType))) {
+            socket.send(topic.getBytes(), ZMQ.SNDMORE);
+        }
+
+        socket.send(logLine.getBytes(), blocking ? 0 : ZMQ.NOBLOCK);
+    }
 
 	@Override
 	public void activateOptions() {
@@ -76,6 +108,7 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 
 		final Context context = ZMQ.context(threads);
 		Socket sender;
+
 		if (PUBSUB.equals(socketType)) {
 			LogLog.debug("Setting socket type to PUB");
 			sender = context.socket(ZMQ.PUB);
@@ -175,5 +208,21 @@ public class ZMQAppender extends AppenderSkeleton implements Appender {
 	
 	public void setIdentity(final String identity) {
 		this.identity = identity;
+	}
+	
+	public String getTags() {
+		return tags;
+	}
+	
+	public void setTags(final String tags) {
+		this.tags = tags;
+	}
+	
+	public String getEventFormat() {
+		return eventFormat;
+	}
+
+	public void setEventFormat(final String eventFormat) {
+		this.eventFormat = eventFormat;
 	}
 }

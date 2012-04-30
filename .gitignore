@@ -6,4 +6,5 @@ target/*
 .settings/
 .project
 .idea
-*/*.iml
+Main.iml
+Test.iml

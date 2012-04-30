@@ -24,21 +24,16 @@ However in my testing the expected functionality indeed works:
 - Topics
 - connect vs. bind
 - Load balanced sockets
+- Tags
+- Different formats (`json` vs. `json_event`)
 
-I've tested sending from a real application to a logstash instance listening on the appropriate socket pair type. I've also tested with a ghetto sender app that I cribbed from the log4j website.
+We're running this @enStratus pushing 600k events an hour (INFO logging for all applications) and have yet to have a problem with it.
 
 # Sample properties
 
 ```
-# The Root uses the Console
-log4j.rootCategory=TRACE,Console,Zmq
+log4j.rootCategory=TRACE,Zmq
 
-
-# Setup the Console
-log4j.appender.Console=org.apache.log4j.ConsoleAppender
-log4j.appender.Console.Threshold=TRACE
-log4j.appender.Console.layout=org.apache.log4j.PatternLayout
-log4j.appender.Console.layout.ConversionPattern=[%d{dd MMM yyyy HH:mm:ss.SSS}] [%p.%c] %m%n
 
 log4j.appender.Zmq=com.enstratus.logstash.ZMQAppender
 log4j.appender.Zmq.Threshold=TRACE
@@ -52,12 +47,17 @@ log4j.appender.Zmq.threads=1
 # Valid socketType options are push and pub
 log4j.appender.Zmq.socketType=push
 log4j.appender.Zmq.identity=appender-test
+# Valid messageFormat options are json and json_event
+# default is json_event
 # When using pub sockets,
 # you can also set a topic
 # log4j.appender.Zmq.topic=footopic
+# 
+# If you want to add any tags:
+log4j.appender.Zmq.tags=foo,bar,baz
 ```
 
-## JSON output
+## `json` format output
 
 ```json
 {
@@ -74,11 +74,51 @@ log4j.appender.Zmq.identity=appender-test
     "line":"16"
   },
   "mdc":{},
-  "identity":"appender-test"
+  "identity":"appender-test",
+  "tags":["foo","bar","baz"]
 }
 ```
 
-If you set the `identity` property, this will not only set the socket identity but also add a new field to the JSON called, surprisingly, identity. The reason for this is that there is currently NO way in ZeroMQ to get a peer's identity outside of making it part of the message.
+## `json_event` format output
+
+The default format is `json_event`. This is designed to lay the message out in a format that requires less filtering on the part of logstash.
+
+Note that `tags` may or may not be present. Also note that the `stacktrace` may or may not be present.
+
+```json
+{
+    "source": "file: //appender-test/Log4jExample.java/foo.Log4jExample/main",
+    "source_host": "appender-test",
+    "source_path": "foo.Log4jExample",
+    "file": "Log4jExample.java",
+    "message": "Hellothisisanfatalmessage",
+    "timestamp": 1335760642237,
+    "tags": [
+        "zmq",
+        "foo",
+        "bar",
+        "baz"
+    ],
+    "additionalFields": {
+        "class_file": "foo.Log4jExample",
+        "fqn": "org.apache.log4j.Category",
+        "level": "FATAL",
+        "thread": "main",
+        "line_number": "20",
+        "stacktrace": "java.io.IOException: Ithrewanexception\\n\\tatfoo.Log4jExample.main(Log4jExample.java: 20)"
+    }
+}
+```
+
+## About identity
+If you set the `identity` property, this will not only set the socket identity but also add a new field to the JSON named based on the `eventFormat` property: 
+
+- `json_event` will call the field `source_host`
+- `json` will call the field `identity`
+
+The reason for this is that there is currently NO way in ZeroMQ to get a peer's identity outside of making it part of the message.
+If you do not set an identity, when using `json_event`, the identity will be set to the local machine name. In the event that fails, the identity will be `unknown-host`.
+
 
 ## Sample logstash input for the above example
 
@@ -91,20 +131,25 @@ input {
     topology => "pushpull"
     address => "tcp://*:5556"
     mode => "server"
-    format => "json"
+    format => "json" # You should use json regardless of the eventFormat property (for now)
   }
 }
 
 filter {
   # set the timestamp of the message
   # from the `time` value
+  # for json eventFormat
   date { time => "UNIX_MS" }
-  
+  # for json_event eventFormat
+  date { timstamp => "UNIX_MS" }
+ 
+  # Not all of these are neccessary when using
+  # eventFormat of json_event
   # shift things around
   # to make sense
   mutate {
     remove => ["time", "fqn", "info", "mdc"]
-    replace => ["@message", "%{msg}"]
+    replace => ["@message", "%{msg}"] # change msg to message for json_event
     replace => ["@source_host", "%{identity}"]
     replace => ["@source_path", "%{thread}"]
   }
@@ -126,8 +171,6 @@ output {
 
 - I still need to expose more sockopts - HWM, BACKLOG
 - I should probably make PAIR socket types an option as well
-- Probably going to end up converting to a custom layout for logevent
-- Add more information to the JSON?
 
 # Credits
 I've not done much real work myself. This has been done by muddling through the existing work of the logcentric code and figuring out Java in the process.
