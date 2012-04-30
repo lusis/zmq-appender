@@ -11,7 +11,6 @@ import com.google.gson.*;
 
 import com.enstratus.logstash.data.LoggingEventData;
 import com.enstratus.logstash.LogstashMessage;
-import sun.net.idn.StringPrep;
 
 public class ZMQAppender extends AppenderSkeleton {
 
