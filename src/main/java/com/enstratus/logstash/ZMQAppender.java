@@ -10,7 +10,7 @@ import org.zeromq.ZMQ.Socket;
 import com.google.gson.*;
 
 import com.enstratus.logstash.data.LoggingEventData;
-import com.enstratus.logstash.LogstashMessage;
+import com.enstratus.logstash.layouts.*;
 
 public class ZMQAppender extends AppenderSkeleton {
 
@@ -74,25 +74,12 @@ public class ZMQAppender extends AppenderSkeleton {
         }
 
         if(JSONFORMAT.equals(messageFormat)) {
-            JsonObject eventData = (JsonObject) gson.toJsonTree(data);
-            JsonParser parser = new JsonParser();
-
-            if (identifier != null) {
-                String identity = "identity";
-                eventData.addProperty(identity, identifier);
-            }
-
-            if (tags != null) {
-                String tag_key = "tags";
-                JsonElement o = (JsonElement)parser.parse(gson.toJson(tagz));
-                LogLog.debug("tagz: " + gson.toJson(tagz));
-                eventData.add(tag_key, o);
-            }
-            logLine = gson.toJson(eventData);
+            JSONMessage message = new JSONMessage(data,identifier,tagz);
+            logLine = message.toJson();
         }
         else if(JSONEVENTFORMAT.equals(messageFormat)) {
             LogstashMessage message = new LogstashMessage(data,identifier,tagz);
-            logLine = gson.toJson(message);
+            logLine = message.toJson();
         }
         if ((topic != null) && (PUBSUB.equals(socketType))) {
             socket.send(topic.getBytes(), ZMQ.SNDMORE);

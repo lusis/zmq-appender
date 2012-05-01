@@ -1,9 +1,8 @@
-package com.enstratus.logstash;
+package com.enstratus.logstash.layouts;
 
 import com.enstratus.logstash.data.*;
-import sun.net.idn.StringPrep;
 
-import java.net.UnknownHostException;
+import com.google.gson.*;
 import java.util.*;
 import org.apache.commons.lang.StringUtils;
 
@@ -18,7 +17,6 @@ public class LogstashMessage {
     private long timestamp;
 
     private String[] tags;
-    //private List<String> tags = new ArrayList<String>();
     private Map<String, Object> additionalFields = new HashMap<String, Object>();
 
     public LogstashMessage() {
@@ -27,11 +25,7 @@ public class LogstashMessage {
     public LogstashMessage(LoggingEventData event, String source_host, String[] tags) {
         String localHost = source_host;
         if (null == localHost) {
-            try {
-                localHost = java.net.InetAddress.getLocalHost().getHostName();
-            }catch (UnknownHostException e) {
-                localHost = "unknown-host";
-            }
+            localHost = new HostData().getHostName();
         }
         this.source_host = localHost;
         this.timestamp = event.time;
@@ -67,6 +61,20 @@ public class LogstashMessage {
             }
         }
 
+    }
+
+    public String toJson() {
+        Map<String, Object> jm = new HashMap<String, Object>();
+
+        jm.put("@source_host", source_host);
+        jm.put("@source", source);
+        jm.put("@timestamp", timestamp);
+        jm.put("@source_path", source_path);
+        jm.put("@message", message);
+        jm.put("@tags", tags);
+        jm.put("@fields",additionalFields);
+
+        return new Gson().toJson(jm);
     }
 
     public String getSource() {
