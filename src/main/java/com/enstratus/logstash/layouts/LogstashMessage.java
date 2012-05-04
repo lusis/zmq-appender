@@ -45,6 +45,7 @@ public class LogstashMessage {
         this.source = "file://"+localHost+"/"+event.info.file+"/"+event.info.clazz+"/"+event.info.method;
 
         // Populate the additionalFields
+        this.additionalFields.put("timestamp", event.time);
         this.additionalFields.put("fqn", event.fqn);
         this.additionalFields.put("class_file", event.info.clazz);
         this.additionalFields.put("level", event.level);
@@ -68,7 +69,6 @@ public class LogstashMessage {
 
         jm.put("@source_host", source_host);
         jm.put("@source", source);
-        jm.put("@timestamp", timestamp);
         jm.put("@source_path", source_path);
         jm.put("@message", message);
         jm.put("@tags", tags);

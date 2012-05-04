@@ -1,5 +1,7 @@
 # ZeroMQ log4j appender
 
+CURRENT RELEASE: 0.4.0 for use with Logstash Master branch
+
 I had a need for a log4j appender that used ZMQ for transport. The only place that existed was here:
 
 https://github.com/ichiban/logcentric
@@ -58,6 +60,7 @@ log4j.appender.Zmq.tags=foo,bar,baz
 ```
 
 ## `json` format output
+This is the original format shipped by Logcentric. I don't use it anymore but I have no intention of getting rid of it.
 
 ```json
 {
@@ -81,25 +84,25 @@ log4j.appender.Zmq.tags=foo,bar,baz
 
 ## `json_event` format output
 
-The default format is `json_event`. This is designed to lay the message out in a format that requires less filtering on the part of logstash.
+The default format is `json_event`. This is designed to lay the message out in a format that requires less filtering on the part of logstash. In fact, you can pass through these messages with no filters whatsoever and they'll do the right thing. In fact, if you leverage tags appropriately at the appender side, you can easily do routing just on tags alone.
 
 Note that `tags` may or may not be present. Also note that the `stacktrace` may or may not be present.
 
 ```json
 {
-    "source": "file: //appender-test/Log4jExample.java/foo.Log4jExample/main",
-    "source_host": "appender-test",
-    "source_path": "foo.Log4jExample",
-    "file": "Log4jExample.java",
-    "message": "Hellothisisanfatalmessage",
-    "timestamp": 1335760642237,
-    "tags": [
+    "@source": "file: //appender-test/Log4jExample.java/foo.Log4jExample/main",
+    "@source_host": "appender-test",
+    "@source_path": "foo.Log4jExample",
+    "@file": "Log4jExample.java",
+    "@message": "Hello this is an fatal message",
+    "@tags": [
         "zmq",
         "foo",
         "bar",
         "baz"
     ],
     "additionalFields": {
+    	"timestamp": 1335760642237,
         "class_file": "foo.Log4jExample",
         "fqn": "org.apache.log4j.Category",
         "level": "FATAL",
@@ -109,6 +112,14 @@ Note that `tags` may or may not be present. Also note that the `stacktrace` may 
     }
 }
 ```
+
+### Timestamp notes
+One thing to note here is that the timestamp of the event lives in `additionalFields`. The reason for this is in how log4j reports timestamps. Rather than fight with building something to convert the java epoch w/millisecond timestamps to ISO8601 (or pull in another dep that could cause issues), I chose to move the event timestamp to an additional field. If you would like to re-timestamp the event, use the `date` filter in logstash to do so converting this field.
+
+### Type field
+Also note that no `@type` field is being sent. This is to reduce confusion on the logstash side. Inputs in logstash REQUIRE a type but if the appender were to set the type, it would OVERWRITE the type set in the input stanza of the Logstash configuration. This could cause some serious WTF moments when trying to route to specific outputs.
+
+_As of this release (0.4.0) the fixes for pure `json_events` in logstash inputs ONLY exist in Logstash master. I will update this README when the next release of logstash happens._
 
 ## About identity
 If you set the `identity` property, this will not only set the socket identity but also add a new field to the JSON named based on the `eventFormat` property: 
@@ -131,7 +142,7 @@ input {
     topology => "pushpull"
     address => "tcp://*:5556"
     mode => "server"
-    format => "json" # You should use json regardless of the eventFormat property (for now)
+    format => "json_event" # You should use json regardless of the eventFormat property (for now)
   }
 }
 

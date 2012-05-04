@@ -1,3 +1,6 @@
+# 0.4.0
+- Minor change to `json_event` format.
+
 # 0.3.0
 - Moved message formatting into dedicated classes
 - `json_event` now formats as a `Logstash::Event` json
