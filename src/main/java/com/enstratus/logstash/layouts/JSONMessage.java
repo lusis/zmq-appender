@@ -1,12 +1,8 @@
 package com.enstratus.logstash.layouts;
 
 import com.enstratus.logstash.data.*;
-import com.google.gson.*;
+import net.minidev.json.JSONObject;
 
-import java.net.UnknownHostException;
-import java.util.*;
-import org.apache.commons.lang.StringUtils;
-import sun.net.idn.StringPrep;
 
 public class JSONMessage {
 
@@ -38,23 +34,19 @@ public class JSONMessage {
         this.tags = tags;
     }
 
-    public JSONMessage() {
-
-    }
-
     public JSONMessage(LoggingEventData event, String identity, String[] tags) {
         String localHost = identity;
 
-        this.eventData = event;
+        setEventData(event);
 
         if (null == localHost) {
             localHost = new HostData().getHostName();
-            // inject the identity
         }
-        this.identity = localHost;
+
+        setIdentity(localHost);
 
         if (!(null == tags)) {
-            this.tags = tags;
+            setTags(tags);
         }
 
     }
@@ -63,18 +55,18 @@ public class JSONMessage {
         String ident = this.getIdentity();
         String[] tagz = this.getTags();
         LoggingEventData event = this.getEventData();
+        JSONObject jsonEvent = new JSONObject();
 
         // Convert existing LoggingEventData to JsonObject
         // So we can inject some additional data
-        JsonObject ed = (JsonObject) new Gson().toJsonTree(event);
-        JsonParser parser = new JsonParser();
-        ed.addProperty("identity", ident);
+
+        jsonEvent.put("fqn", event.fqn);
+        jsonEvent.put("identity", ident);
 
         if (!(null == tagz)) {
-            JsonElement o = (JsonElement)parser.parse(new Gson().toJson(tags));
-            ed.add("tags", o);
+            jsonEvent.put("tags",tagz);
         }
 
-        return new Gson().toJson(ed);
+        return jsonEvent.toJSONString();
     }
 }

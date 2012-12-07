@@ -2,10 +2,9 @@ package com.enstratus.logstash;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
-import org.apache.log4j.helpers.LogLog;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Context;
-import org.zeromq.ZMQ.Socket;
+import org.jeromq.ZMQ;
+import org.jeromq.ZMQ.Context;
+import org.jeromq.ZMQ.Socket;
 import org.apache.commons.lang.StringUtils;
 import java.util.*;
 

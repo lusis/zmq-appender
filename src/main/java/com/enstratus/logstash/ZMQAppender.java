@@ -3,11 +3,9 @@ package com.enstratus.logstash;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.helpers.LogLog;
-import org.zeromq.ZMQ;
-import org.zeromq.ZMQ.Context;
-import org.zeromq.ZMQ.Socket;
-
-import com.google.gson.*;
+import org.jeromq.ZMQ;
+import org.jeromq.ZMQ.Context;
+import org.jeromq.ZMQ.Socket;
 
 import com.enstratus.logstash.data.LoggingEventData;
 import com.enstratus.logstash.layouts.*;
@@ -15,7 +13,6 @@ import com.enstratus.logstash.layouts.*;
 public class ZMQAppender extends AppenderSkeleton {
 
 	private Socket socket;
-	private final Gson gson = new Gson();
 
 	// ZMQ specific "stuff"
 	private int threads;
@@ -47,25 +44,26 @@ public class ZMQAppender extends AppenderSkeleton {
 		this.socket = socket;
 	}
 
-	@Override
 	public void close() {
 
 	}
 
-	@Override
 	public boolean requiresLayout() {
         return false;
 	}
 
 	@Override
 	protected void append(LoggingEvent event) {
+        LogLog.debug("Got append event");
 		final LoggingEventData data = new LoggingEventData(event);
         String messageFormat = getEventFormat();
+        LogLog.debug("Message format: "+ messageFormat);
         String logLine = "";
 
         String identifier = getIdentity();
         String[] tagz;
-        if(!(null == tags)) {
+        if(tags != null) {
+            LogLog.debug("Tags: " + tags);
             tagz = getTags().split(",");
         }
         else
@@ -82,14 +80,16 @@ public class ZMQAppender extends AppenderSkeleton {
             logLine = message.toJson();
         }
         if ((topic != null) && (PUBSUB.equals(socketType))) {
+            LogLog.debug("Sending topic: "+ topic.getBytes());
             socket.send(topic.getBytes(), ZMQ.SNDMORE);
         }
-
+        LogLog.debug("Blocking? " + blocking);
         socket.send(logLine.getBytes(), blocking ? 0 : ZMQ.NOBLOCK);
     }
 
 	@Override
 	public void activateOptions() {
+        LogLog.debug("Configuring appender...");
 		super.activateOptions();
 
 		final Context context = ZMQ.context(threads);
@@ -134,10 +134,12 @@ public class ZMQAppender extends AppenderSkeleton {
 		}
 		
 		if (identity != null) {
+            LogLog.debug("Setting identity to: " + identity);
 			socket.setIdentity(identity.getBytes());
 		}
 		
 		this.socket = socket;
+        LogLog.debug("Finished configuring appender");
 	}
 
 	public int getThreads() {

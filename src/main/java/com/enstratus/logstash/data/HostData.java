@@ -4,21 +4,21 @@ import java.net.UnknownHostException;
 
 public class HostData {
 
+    private String hostName;
+
     public String getHostName() {
-        return hostName;
+        return this.hostName;
     }
 
     public void setHostName(String hostName) {
         this.hostName = hostName;
     }
 
-    public String hostName;
-
     public HostData() {
         try {
-            this.hostName = java.net.InetAddress.getLocalHost().getHostName();
+            setHostName(java.net.InetAddress.getLocalHost().getHostName());
         }catch (UnknownHostException e) {
-            this.hostName = "unknown-host";
+            setHostName("unknown-host");
         }
     }
 }
