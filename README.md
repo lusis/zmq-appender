@@ -1,5 +1,7 @@
 # ZeroMQ log4j appender
 
+[![Build Status](https://travis-ci.org/lusis/zmq-appender.png)](https://travis-ci.org/lusis/zmq-appender)
+
 CURRENT RELEASE: 0.4.0 for use with Logstash Master branch
 
 I had a need for a log4j appender that used ZMQ for transport. The only place that existed was here:
