@@ -4,8 +4,6 @@ import com.enstratus.logstash.data.*;
 
 import net.minidev.json.JSONObject;
 import java.util.*;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.spi.ThrowableInformation;
 import org.apache.log4j.helpers.LogLog;
 
 public class LogstashMessage {

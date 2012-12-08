@@ -1,7 +1,5 @@
 package com.enstratus.logstash.data;
 
-import sun.net.idn.StringPrep;
-
 import java.util.*;
 
 public class TagData {
